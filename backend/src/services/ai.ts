@@ -21,8 +21,9 @@ const TONES: Record<string, string> = {
 };
 
 export async function aiSuggest(opts: { lang: string; tone: string; ctx: Ctx; question?: string; recent?: string }) {
+  const orKey = process.env.OPENROUTER_API_KEY || (process.env.GEMINI_API_KEY?.startsWith('sk-or-') ? process.env.GEMINI_API_KEY : undefined);
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return { ok: false as const, reason: 'no_key' };
+  if (!orKey && !key) return { ok: false as const, reason: 'no_key' };
   const system = `${PROMPTS[opts.lang === 'en' ? 'en' : 'desi']}\n${TONES[opts.tone] || ''}`;
   const user = `User context (JSON): ${JSON.stringify(opts.ctx)}
 ${opts.recent ? `Recent sessions: ${opts.recent}\n` : ''}Question: ${opts.question || 'What should I focus on today?'}`;
@@ -31,6 +32,9 @@ ${opts.recent ? `Recent sessions: ${opts.recent}\n` : ''}Question: ${opts.questi
     contents: [{ role: 'user', parts: [{ text: user }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
   });
+
+  if (orKey) return openRouter(orKey, system, user);
+  if (!key) return { ok: false as const, reason: 'no_key' };
 
   type Provider = 'studio' | 'vertex';
   const order: Provider[] = process.env.GEMINI_PROVIDER === 'vertex' ? ['vertex'] : process.env.GEMINI_PROVIDER === 'studio' ? ['studio'] : ['studio', 'vertex'];
@@ -94,3 +98,54 @@ async function discoverModels(key: string): Promise<string[]> {
 
 const FALLBACK_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
 const working: Record<string, string | null> = { studio: null, vertex: null };
+
+/* ---------------- OpenRouter (OpenAI-compatible) ---------------- */
+let orFreeCache: { at: number; models: string[] } | null = null;
+async function openRouterFreeModels(): Promise<string[]> {
+  if (orFreeCache && Date.now() - orFreeCache.at < 6 * 3600 * 1000) return orFreeCache.models;
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/models');
+    if (!res.ok) return [];
+    const data = (await res.json()) as { data?: { id: string; pricing?: { prompt?: string; completion?: string } }[] };
+    const free = (data.data || []).filter((m) => m.id.endsWith(':free') || (m.pricing?.prompt === '0' && m.pricing?.completion === '0')).map((m) => m.id);
+    const rank = (id: string) => (/google\/gemini/.test(id) ? 0 : /deepseek/.test(id) ? 1 : /llama/.test(id) ? 2 : /qwen|mistral/.test(id) ? 3 : 4);
+    const models = free.sort((a, b) => rank(a) - rank(b)).slice(0, 6);
+    orFreeCache = { at: Date.now(), models };
+    console.log('OpenRouter free models:', models.join(', '));
+    return models;
+  } catch { return []; }
+}
+
+let orWorking: string | null = null;
+async function openRouter(key: string, system: string, user: string) {
+  const configured = process.env.OPENROUTER_MODEL;
+  const candidates = [...new Set([orWorking, configured, ...(await openRouterFreeModels()), 'openrouter/auto'].filter(Boolean) as string[])].slice(0, 7);
+  const errors: string[] = [];
+  for (const model of candidates) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 30000);
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, 'X-Title': 'Deshi Fitness' },
+        body: JSON.stringify({ model, temperature: 0.7, max_tokens: 1200, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+        signal: ctrl.signal,
+      });
+      if (res.status === 401) return { ok: false as const, reason: 'openrouter: invalid API key (401)' };
+      if (!res.ok) {
+        const detail = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200);
+        errors.push(`${model}: http_${res.status}: ${detail}`);
+        console.warn(`OpenRouter ${model} -> ${res.status}: ${detail}`);
+        continue; // model unavailable / rate-limited / needs credits — try next model
+      }
+      const data = (await res.json()) as { choices?: { message?: { content?: string } }[]; error?: { message?: string } };
+      const text = data.choices?.[0]?.message?.content?.trim();
+      if (!text) { errors.push(`${model}: empty${data.error?.message ? ` (${data.error.message})` : ''}`); continue; }
+      orWorking = model;
+      return { ok: true as const, text, model };
+    } catch (e) {
+      errors.push(`${model}: ${(e as Error).name === 'AbortError' ? 'timeout' : 'network'}`);
+    } finally { clearTimeout(t); }
+  }
+  return { ok: false as const, reason: `openrouter: ${errors[0] || 'no model worked'}` };
+}
