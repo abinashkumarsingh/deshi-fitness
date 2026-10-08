@@ -26,7 +26,7 @@ r.post('/register', limiter, ah(async (req, res) => {
   const exists = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
   if (exists.length) throw new HttpError(409, 'email_taken');
   const [u] = await db.insert(schema.users).values({ email: body.email, name: body.name, password: await bcrypt.hash(body.password, 11) }).returning();
-  await db.insert(schema.userSettings).values({ userId: u.id });
+  await db.insert(schema.userSettings).values({ userId: u.id, languageMode: 'en', tone: 'trainer' });
   res.status(201).json({ user: publicUser(u), ...tokens(u.id) });
 }));
 

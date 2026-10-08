@@ -6,7 +6,7 @@ import { ah, daysAgo, HttpError } from '../services/util';
 import { uid } from '../services/auth';
 import { detectPRs } from '../services/prs';
 import { buildContext, todaySuggestions } from '../services/suggestions';
-import { aiSuggest } from '../services/ai';
+import { suggestExercises } from '../services/coach';
 
 const S = schema;
 
@@ -63,7 +63,7 @@ goalsRouter.delete('/:id', ah(async (req, res) => {
 /* ---------- Suggestions + AI ---------- */
 async function lang(userId: string) {
   const [s] = await db.select().from(S.userSettings).where(eq(S.userSettings.userId, userId));
-  return { lang: s?.languageMode || 'desi', tone: s?.tone || 'bhai', aiEnabled: s?.aiEnabled ?? true };
+  return { lang: 'en', tone: 'trainer', aiEnabled: s?.aiEnabled ?? true };
 }
 export const suggestionsRouter = Router();
 suggestionsRouter.get('/today', ah(async (req, res) => {
@@ -79,13 +79,9 @@ suggestionsRouter.post('/:id/:act(accept|dismiss)', ah(async (req, res) => {
 
 export const aiRouter = Router();
 aiRouter.post('/suggest', ah(async (req, res) => {
-  const { question } = z.object({ question: z.string().max(500).optional() }).parse(req.body || {});
   const pref = await lang(uid(req));
-  const ctx = await buildContext(uid(req));
   if (!pref.aiEnabled) return res.json({ ok: false, reason: 'disabled' });
-  const recent = await db.select().from(S.workoutSessions).where(eq(S.workoutSessions.userId, uid(req))).orderBy(desc(S.workoutSessions.date)).limit(5);
-  const recentStr = recent.map((s) => `${s.date.toISOString().slice(0, 10)} ${s.name || s.type || 'session'} RPE ${s.sessionRpe ?? '-'}`).join('; ');
-  res.json(await aiSuggest({ lang: pref.lang, tone: pref.tone, ctx, question, recent: recentStr }));
+  res.json(await suggestExercises(uid(req)));
 }));
 
 /* ---------- Simple logs: body, sleep, nutrition ---------- */
