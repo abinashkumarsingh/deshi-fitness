@@ -80,7 +80,10 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 export async function suggestExercises(userId: string) {
   const h = await buildHistory(userId);
-  const libraryNames = h.library.map((e) => `${e.name} (${e.muscleGroup || e.category})`).join('; ');
+  // Keep the prompt small: curated core lifts + anything the member has used/created (not all 900+ library entries)
+  const usedNames = new Set(h.history.flatMap((x) => x.exercises.map((e) => e.name)));
+  const promptLib = h.library.filter((e) => !e.slug?.startsWith('fedb:') || e.isCustom || usedNames.has(e.name));
+  const libraryNames = promptLib.map((e) => `${e.name} (${e.muscleGroup || e.category})`).join('; ');
   const user = `TODAY: ${new Date().toDateString()}
 GOAL: ${h.goal || 'general fitness'}
 DAYS SINCE EACH MUSCLE GROUP WAS LAST TRAINED: ${JSON.stringify(h.lastTrained)}

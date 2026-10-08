@@ -61,7 +61,7 @@ export async function buildContext(userId: string): Promise<Ctx> {
   const sets7 = recentIds.length ? await db.select().from(S.workoutSets).where(inArray(S.workoutSets.sessionId, recentIds)) : [];
   const exIds = [...new Set(sets7.map((s) => s.exerciseId))];
   const exRows = exIds.length ? await db.select().from(S.exercises).where(inArray(S.exercises.id, exIds)) : [];
-  const legGroups = ['legs', 'quads', 'hamstrings', 'glutes', 'calves'];
+  const legGroups = ['legs', 'quads', 'hamstrings', 'glutes', 'calves', 'adductors', 'abductors'];
   const legsTrained7 = exRows.some((e) => legGroups.includes(e.muscleGroup || ''));
 
   // Top-set RPE progress: last top set per exercise with rpe <= 8
