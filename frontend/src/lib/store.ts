@@ -25,7 +25,7 @@ export interface ActiveWorkout {
   readiness?: Record<string, number>;
 }
 
-const defaultSettings: Settings = { languageMode: 'desi', tone: 'bhai', theme: 'dark', units: 'metric', aiEnabled: true };
+const defaultSettings: Settings = { languageMode: 'en', tone: 'trainer', theme: 'dark', units: 'metric', aiEnabled: true };
 
 interface State {
   auth: AuthState | null;
@@ -71,7 +71,7 @@ export const useStore = create<State>((set, get) => ({
 
 const dicts: Record<string, Record<string, string>> = { en, desi, hi: desi };
 export function useT() {
-  const lang = useStore((s) => s.settings.languageMode);
+  const lang = 'en'; // app is English-only
   return (key: keyof typeof en | string, vars?: Record<string, string | number>) => {
     let s = dicts[lang]?.[key] ?? (en as Record<string, string>)[key] ?? key;
     if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
