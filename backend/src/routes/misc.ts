@@ -171,7 +171,7 @@ settingsRouter.get('/', ah(async (req, res) => {
   let [s] = await db.select().from(S.userSettings).where(eq(S.userSettings.userId, uid(req)));
   if (!s) [s] = await db.insert(S.userSettings).values({ userId: uid(req) }).returning();
   const [u] = await db.select({ email: S.users.email, name: S.users.name }).from(S.users).where(eq(S.users.id, uid(req)));
-  res.json({ ...s, user: u, aiAvailable: Boolean(process.env.GEMINI_API_KEY) });
+  res.json({ ...s, user: u, aiAvailable: Boolean(process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY) });
 }));
 settingsRouter.put('/', ah(async (req, res) => {
   const body = settingsSchema.parse(req.body);

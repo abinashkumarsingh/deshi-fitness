@@ -19,7 +19,11 @@ const exSchema = z.object({
 const visible = (userId: string) => or(isNull(E.userId), eq(E.userId, userId));
 
 exercisesRouter.get('/', ah(async (req, res) => {
-  const rows = await db.select().from(E).where(visible(uid(req)));
+  // List view: omit the heavy instruction/image fields (fetched per exercise via GET /exercises/:id)
+  const rows = await db.select({
+    id: E.id, slug: E.slug, name: E.name, category: E.category, muscleGroup: E.muscleGroup, equipment: E.equipment,
+    difficulty: E.difficulty, type: E.type, tracking: E.tracking, isCustom: E.isCustom, userId: E.userId, videoUrl: E.videoUrl,
+  }).from(E).where(visible(uid(req)));
   res.json(rows.sort((a, b) => a.name.localeCompare(b.name)));
 }));
 exercisesRouter.get('/:id', ah(async (req, res) => {
