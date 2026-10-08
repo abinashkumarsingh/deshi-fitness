@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useStore, useT, exName } from '../lib/store';
 import type { Exercise } from '../lib/types';
@@ -98,20 +98,46 @@ export function Stepper({ value, onChange, step = 1, min = 0, label, unit, big }
   const [text, setText] = useState(String(value));
   useEffect(() => setText(String(value)), [value]);
   const set = (v: number) => onChange(Math.max(min, Math.round(v * 100) / 100));
-  // Unbounded is a wide face: shrink as digits grow so the number never collides with the +/- buttons.
-  const len = text.length;
-  const size = big ? (len <= 2 ? 'text-[60px]' : len <= 3 ? 'text-[48px]' : len <= 4 ? 'text-[38px]' : 'text-[32px]') : (len <= 2 ? 'text-[42px]' : len <= 3 ? 'text-[34px]' : 'text-[28px]');
+
+  // Auto-fit: measure the number at 100px and scale it to the space between the +/- buttons,
+  // so 1-, 3- or 5-character values (5, 102.5, 1000) always fit and stay centred.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const unitRef = useRef<HTMLSpanElement>(null);
+  const [fit, setFit] = useState({ font: big ? 60 : 42, width: 0, stacked: false });
+  const maxFont = big ? 64 : 44, minFont = 22, comfy = big ? 46 : 34;
+  useLayoutEffect(() => {
+    const calc = () => {
+      const box = boxRef.current, m = measureRef.current;
+      if (!box || !m) return;
+      const at100 = m.offsetWidth || 1;
+      const fontFor = (avail: number) => Math.max(minFont, Math.min(maxFont, Math.floor((avail * 100) / at100)));
+      // Prefer number + unit side by side; if that makes the number too small, put the unit underneath.
+      const inline = fontFor(box.clientWidth - (unitRef.current?.offsetWidth || 0) - 12);
+      const stacked = unit && inline < comfy;
+      const font = stacked ? fontFor(box.clientWidth - 6) : inline;
+      setFit({ font, width: Math.ceil((at100 * font) / 100) + 4, stacked: !!stacked });
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    if (boxRef.current) ro.observe(boxRef.current);
+    document.fonts?.ready.then(calc).catch(() => {});
+    return () => ro.disconnect();
+  }, [text, unit, big]); // eslint-disable-line
+
   return (
     <div>
       {label && <div className="label text-center">{label}</div>}
-      <div className="flex items-center gap-2">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
         <button aria-label={`Decrease ${label || ''}`} onClick={() => set(value - step)} className="btn-step">{Icon.minus}</button>
-        <div className="flex min-w-0 flex-1 items-baseline justify-center gap-1 px-1">
+        <div ref={boxRef} className={`relative flex min-w-0 justify-center overflow-hidden ${fit.stacked ? 'flex-col items-center' : 'items-baseline gap-1.5'}`}>
+          <span ref={measureRef} aria-hidden className="num pointer-events-none invisible absolute left-0 top-0 whitespace-pre" style={{ fontSize: 100, lineHeight: 1 }}>{text || '0'}</span>
           <input inputMode="decimal" aria-label={label} value={text}
             onChange={(e) => { setText(e.target.value); const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(n); }}
             onBlur={() => setText(String(value))}
-            className={`num min-w-0 flex-1 bg-transparent text-center leading-none outline-none ${size}`} />
-          {unit && <span className="shrink-0 text-lg font-semibold text-muted">{unit}</span>}
+            style={{ fontSize: fit.font, width: fit.width || undefined, lineHeight: 1.1 }}
+            className="num min-w-0 bg-transparent p-0 text-center outline-none" />
+          {unit && <span ref={unitRef} className={`shrink-0 text-[17px] font-semibold text-muted ${fit.stacked ? '-mt-1 leading-none' : ''}`}>{unit}</span>}
         </div>
         <button aria-label={`Increase ${label || ''}`} onClick={() => set(value + step)} className="btn-step">{Icon.plus}</button>
       </div>
