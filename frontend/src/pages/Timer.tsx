@@ -65,12 +65,12 @@ export default function Timer() {
       lastPhase.current = idx;
       if (ph) {
         beep(ph.kind === 'work' ? 1046 : 523, 350); vibrate(ph.kind === 'work' ? [150, 80, 150] : 300);
-        if (voice) say(ph.kind === 'work' ? (ph.round > 0 && totalRounds > 1 ? `${t('round')} ${ph.round}. ${t('go')}` : t('go')) : ph.kind === 'rest' ? t('rest') : 'Get ready', lang === 'en' ? 'en-IN' : 'hi-IN');
+        if (voice) say(ph.kind === 'work' ? (ph.round > 0 && totalRounds > 1 ? `${t('round')} ${ph.round}. ${t('go')}` : t('go')) : ph.kind === 'rest' ? t('rest') : 'Get ready', 'en-IN');
       }
     } else if (s !== lastSec.current && s <= 3 && s > 0) beep(784, 100, 0.2);
     if (type === 'emom' && ph?.kind === 'work' && s !== lastSec.current && s === 30 && cfg.work === 60) beep(660, 80, 0.15);
     lastSec.current = s;
-    if (finished) { beep(1318, 700); vibrate([300, 100, 300, 100, 300]); if (voice) say(t('done'), lang === 'en' ? 'en-IN' : 'hi-IN'); setRunning(false); }
+    if (finished) { beep(1318, 700); vibrate([300, 100, 300, 100, 300]); if (voice) say(t('done'), 'en-IN'); setRunning(false); }
   }); // eslint-disable-line
 
   const start = () => { unlockAudio(); setStartAt(Date.now()); setPausedMs(0); setPauseStart(null); setRunning(true); lastPhase.current = -1; setFull(true); };

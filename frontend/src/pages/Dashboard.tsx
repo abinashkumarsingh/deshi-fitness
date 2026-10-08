@@ -16,7 +16,9 @@ export default function Dashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [recent, setRecent] = useState<Session[]>([]);
   const [macros, setMacros] = useState<{ date: string; calories: number; protein: number; waterMl: number }[]>([]);
-  const [ai, setAi] = useState<{ busy: boolean; text?: string; err?: string }>({ busy: false });
+  interface PlanItem { exerciseId: string | null; name: string; sets: number; reps: number | null; weight: number | null; durationSec: number | null; reason: string }
+  const [ai, setAi] = useState<{ busy: boolean; text?: string; err?: string; plan?: PlanItem[]; focus?: string | null }>({ busy: false });
+  const { setActive, active } = useStore();
   const [sheet, setSheet] = useState<'weight' | 'sleep' | null>(null);
   const [weight, setWeight] = useState(70);
   const [sleepH, setSleepH] = useState(7);
@@ -45,9 +47,18 @@ export default function Dashboard() {
   const askAi = async () => {
     setAi({ busy: true });
     try {
-      const r = await api<{ ok: boolean; text?: string; reason?: string }>('/ai/suggest', { body: {} });
-      setAi(r.ok ? { busy: false, text: r.text } : { busy: false, err: r.reason === 'no_key' || r.reason === 'disabled' ? t('ai_unavailable') : `AI: ${r.reason}` });
+      const r = await api<{ ok: boolean; text?: string; reason?: string; plan?: PlanItem[]; focus?: string | null }>('/ai/suggest', { body: {} });
+      setAi(r.ok ? { busy: false, text: r.text, plan: r.plan, focus: r.focus } : { busy: false, err: r.reason === 'no_key' || r.reason === 'disabled' ? t('ai_unavailable') : `AI: ${r.reason}` });
     } catch { setAi({ busy: false, err: 'AI request failed' }); }
+  };
+  const startPlan = () => {
+    if (!ai.plan?.length) return;
+    if (active && !confirm(t('confirm_discard'))) return;
+    setActive({
+      startedAt: Date.now(), name: ai.focus || 'AI workout', current: 0,
+      exercises: ai.plan.filter((p) => p.exerciseId).map((p) => ({ exerciseId: p.exerciseId!, sets: [], target: { sets: p.sets, reps: p.reps, weight: p.weight, durationSec: p.durationSec } })),
+    });
+    nav('/workout');
   };
   const addWater = async () => { await api('/nutrition', { body: { meal: 'Water', waterMl: 250 } }); flash('💧 +250ml'); load(); };
   const saveWeight = async () => { await api('/body', { body: { weight: u.toKg(weight) } }); setSheet(null); flash('✓'); load(); };
@@ -111,8 +122,25 @@ export default function Dashboard() {
           ))}
           {settings.aiEnabled && (
             <div className="card">
-              {ai.text ? <div className="whitespace-pre-wrap text-[17px] leading-relaxed">{ai.text}</div> : ai.err ? <p className="text-muted">{ai.err}</p> : null}
-              <button onClick={askAi} disabled={ai.busy} className={`btn-secondary w-full ${ai.text || ai.err ? 'mt-4' : ''}`}>{Icon.sparkle}{ai.busy ? t('ai_thinking') : t('ask_ai')}</button>
+              {ai.plan && ai.plan.length > 0 ? (
+                <div>
+                  <div className="text-[14px] font-semibold uppercase tracking-wide text-muted">{t('ai_title')}</div>
+                  {ai.focus && <div className="mt-1 text-2xl font-extrabold">{ai.focus}</div>}
+                  <ol className="mt-3 space-y-3">
+                    {ai.plan.map((p, i) => (
+                      <li key={i} className="flex gap-3">
+                        <span className="num mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated text-base">{i + 1}</span>
+                        <span>
+                          <span className="block text-lg font-bold">{p.name} <span className="font-semibold text-accent">{p.sets}×{p.reps ?? (p.durationSec ? `${p.durationSec}s` : '')}{p.weight ? ` · ${u.show(p.weight)}${u.wUnit}` : ''}</span></span>
+                          <span className="text-[15px] text-muted">{p.reason}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                  <button onClick={startPlan} className="btn-primary mt-4 w-full">{Icon.dumbbell}{t('start_plan')}</button>
+                </div>
+              ) : ai.text ? <div className="whitespace-pre-wrap text-[17px] leading-relaxed">{ai.text}</div> : ai.err ? <p className="text-muted">{ai.err}</p> : null}
+              <button onClick={askAi} disabled={ai.busy} className={`btn-secondary w-full ${ai.text || ai.err || ai.plan?.length ? 'mt-3' : ''}`}>{Icon.sparkle}{ai.busy ? t('ai_thinking') : ai.plan?.length ? 'Suggest again' : t('ask_ai')}</button>
             </div>
           )}
         </div>

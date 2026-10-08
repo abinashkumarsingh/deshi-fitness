@@ -19,8 +19,6 @@ export default function SettingsPage() {
   return (
     <div className="space-y-4">
       <PageHeader title={t('settings')} back />
-      {row(t('language'), <Segmented value={settings.languageMode} onChange={set('languageMode')} options={[{ value: 'desi', label: 'Desi (Hinglish)' }, { value: 'en', label: 'English' }]} />)}
-      {row(t('tone'), <Segmented value={settings.tone} onChange={set('tone')} options={[{ value: 'bhai', label: 'Bhai' }, { value: 'coach', label: 'Coach' }, { value: 'dost', label: 'Dost' }, { value: 'trainer', label: 'Trainer' }]} />)}
       {row(t('theme'), <Segmented value={settings.theme} onChange={set('theme')} options={[{ value: 'dark', label: t('dark') }, { value: 'light', label: t('light') }]} />)}
       {row(t('units'), <Segmented value={settings.units} onChange={set('units')} options={[{ value: 'metric', label: 'kg' }, { value: 'imperial', label: 'lb' }]} />)}
       {row(t('targets'), <>

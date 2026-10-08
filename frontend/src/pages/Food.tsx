@@ -5,7 +5,7 @@ import { Icon, PageHeader, Sheet, Stepper } from '../components/ui';
 import type { Food as FoodT } from '../lib/types';
 
 interface Log { id: string; date: string; meal: string; foodKey?: string | null; quantity?: number | null; calories?: number | null; protein?: number | null; carbs?: number | null; fat?: number | null; waterMl?: number | null }
-const CATS: Record<string, string> = { roti_chawal: 'Roti/Chawal', dal: 'Dal', sabzi: 'Sabzi', protein: 'Protein', dairy: 'Dairy', snacks: 'Snacks', sweets: 'Sweets', street: 'Street', south_indian: 'South Indian', regional: 'Regional', supplements: 'Supplements', vrat: 'Vrat' };
+const CATS: Record<string, string> = { roti_chawal: 'Breads & Rice', dal: 'Lentils & Beans', sabzi: 'Vegetables', protein: 'Protein', dairy: 'Dairy', snacks: 'Snacks', sweets: 'Sweets', street: 'Street Food', south_indian: 'South Indian', regional: 'Regional', supplements: 'Supplements', vrat: 'Fasting' };
 
 export default function Food() {
   const t = useT();
@@ -64,7 +64,7 @@ export default function Food() {
       </div>
 
       <section>
-        <input className="input mb-3" placeholder={`${t('search')} — roti, dal, paneer…`} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input mb-3" placeholder={`${t('search')} — roti, dal, chicken…`} value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
           {['all', ...Object.keys(CATS)].map((c) => <button key={c} onClick={() => setCat(c)} className={`chip shrink-0 ${cat === c ? 'chip-on' : ''}`}>{c === 'all' ? t('all') : CATS[c]}</button>)}
         </div>

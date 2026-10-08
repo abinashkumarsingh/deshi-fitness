@@ -32,7 +32,7 @@ export default function Exercises() {
         {list.map((e) => (
           <li key={e.id}>
             <button disabled={!e.isCustom} onClick={() => setEdit(e)} className="flex min-h-[64px] w-full items-center justify-between px-4 py-2 text-left disabled:opacity-100">
-              <span><span className="block text-lg font-bold">{e.name}{e.nameDesi && e.nameDesi !== e.name ? <span className="ml-2 font-semibold text-muted">({e.nameDesi})</span> : null}</span>
+              <span><span className="block text-lg font-bold">{e.name}</span>
                 <span className="text-[15px] capitalize text-muted">{e.category} · {e.muscleGroup} · {e.equipment} · {e.type}</span></span>
               {e.isCustom && <span className="text-muted">{Icon.chevron}</span>}
             </button>
