@@ -1,0 +1,146 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../lib/api';
+import { useStore, useT, useUnits, today } from '../lib/store';
+import { Icon, Sheet, Skeleton, Stat, Stepper } from '../components/ui';
+import type { Routine, Session, Suggestion } from '../lib/types';
+
+interface Ctx { sessions7: number; streakDays: number; sleepAvg7: number | null; weightAvg7: number | null; goalType: string | null; daysToEvent: number | null }
+
+export default function Dashboard() {
+  const t = useT();
+  const nav = useNavigate();
+  const u = useUnits();
+  const { settings, auth } = useStore();
+  const [sug, setSug] = useState<{ context: Ctx; suggestions: Suggestion[] } | null>(null);
+  const [routines, setRoutines] = useState<Routine[]>([]);
+  const [recent, setRecent] = useState<Session[]>([]);
+  const [macros, setMacros] = useState<{ date: string; calories: number; protein: number; waterMl: number }[]>([]);
+  const [ai, setAi] = useState<{ busy: boolean; text?: string; err?: string }>({ busy: false });
+  const [sheet, setSheet] = useState<'weight' | 'sleep' | null>(null);
+  const [weight, setWeight] = useState(70);
+  const [sleepH, setSleepH] = useState(7);
+  const [toast, setToast] = useState('');
+
+  const load = () => {
+    api<{ context: Ctx; suggestions: Suggestion[] }>('/suggestions/today').then(setSug).catch(() => {});
+    api<Routine[]>('/routines').then(setRoutines).catch(() => {});
+    api<Session[]>('/workouts?limit=3').then(setRecent).catch(() => {});
+    api<typeof macros>('/metrics/macros?days=7').then(setMacros).catch(() => {});
+  };
+  useEffect(load, []);
+  useEffect(() => { if (sug?.context.weightAvg7) setWeight(Number(u.show(sug.context.weightAvg7))); }, [sug?.context.weightAvg7]); // eslint-disable-line
+
+  const h = new Date().getHours();
+  const greet = h < 12 ? t('greeting_morning') : h < 17 ? t('greeting_afternoon') : t('greeting_evening');
+  const dow = new Date().getDay();
+  const todays = routines.filter((r) => r.days.includes(dow));
+  const todayMacros = macros.find((m) => m.date === today());
+  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2000); };
+
+  const dismiss = async (s: Suggestion) => {
+    setSug((p) => p && { ...p, suggestions: p.suggestions.filter((x) => x.id !== s.id) });
+    await api(`/suggestions/${s.id}/dismiss`, { method: 'POST' }).catch(() => {});
+  };
+  const askAi = async () => {
+    setAi({ busy: true });
+    try {
+      const r = await api<{ ok: boolean; text?: string; reason?: string }>('/ai/suggest', { body: {} });
+      setAi(r.ok ? { busy: false, text: r.text } : { busy: false, err: r.reason === 'no_key' || r.reason === 'disabled' ? t('ai_unavailable') : `AI: ${r.reason}` });
+    } catch { setAi({ busy: false, err: 'AI request failed' }); }
+  };
+  const addWater = async () => { await api('/nutrition', { body: { meal: 'Water', waterMl: 250 } }); flash('💧 +250ml'); load(); };
+  const saveWeight = async () => { await api('/body', { body: { weight: u.toKg(weight) } }); setSheet(null); flash('✓'); load(); };
+  const saveSleep = async () => { await api('/sleep', { body: { hours: sleepH } }); setSheet(null); flash('✓'); load(); };
+
+  const prColor = { high: 'border-l-danger', medium: 'border-l-warning', low: 'border-l-success' };
+  const c = sug?.context;
+
+  return (
+    <div className="space-y-6">
+      <header className="pt-2">
+        <p className="text-lg font-semibold text-muted">{greet}{auth?.user.name ? `, ${auth.user.name.split(' ')[0]}` : ''}</p>
+        <h1 className="num text-[44px] leading-tight">{new Date().toLocaleDateString(settings.languageMode === 'en' ? 'en-IN' : 'en-IN', { weekday: 'long' })}</h1>
+        {c?.goalType && <p className="text-lg font-semibold capitalize text-accent">{c.goalType.replace(/_/g, ' ')}{c.daysToEvent !== null && c.daysToEvent > 0 ? ` · ${c.daysToEvent}d to go` : ''}</p>}
+      </header>
+
+      <div className="grid grid-cols-2 gap-3">
+        {c ? <>
+          <Stat label={t('this_week')} value={c.sessions7} unit={t('sessions')} />
+          <Stat label={t('streak')} value={c.streakDays} accent={c.streakDays > 0} />
+          <Stat label={t('sleep')} value={c.sleepAvg7 !== null ? c.sleepAvg7.toFixed(1) : '–'} unit="h" />
+          <Stat label={t('weight')} value={c.weightAvg7 ? u.show(c.weightAvg7) : '–'} unit={c.weightAvg7 ? u.wUnit : undefined} />
+        </> : [0, 1, 2, 3].map((i) => <Skeleton key={i} h={108} />)}
+      </div>
+
+      <section className="space-y-3">
+        {todays.map((r) => (
+          <button key={r.id} onClick={() => nav('/train', { state: { start: r.id } })} className="card flex w-full items-center justify-between !border-accent text-left">
+            <span><span className="block text-[15px] font-semibold uppercase text-accent">{t('today')}</span><span className="text-2xl font-extrabold">{r.name}</span></span>
+            <span className="text-accent">{Icon.chevron}</span>
+          </button>
+        ))}
+        <button onClick={() => nav('/train')} className="btn-primary btn-xl w-full">{Icon.dumbbell}{t('start_workout')}</button>
+      </section>
+
+      <section>
+        <h2 className="h2 mb-3">{t('quick_log')}</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <button className="btn-secondary" onClick={() => setSheet('weight')}>⚖️ {t('log_weight')}</button>
+          <button className="btn-secondary" onClick={() => setSheet('sleep')}>😴 {t('log_sleep')}</button>
+          <button className="btn-secondary" onClick={() => nav('/food')}>🍛 {t('log_food')}</button>
+          <button className="btn-secondary" onClick={addWater}>💧 {t('log_water')}</button>
+        </div>
+        {todayMacros && (
+          <p className="mt-3 text-[16px] font-semibold text-muted">
+            {t('today')}: <span className="text-fg">{todayMacros.calories}</span> kcal · <span className="text-fg">{Math.round(todayMacros.protein)}g</span> {t('protein')} · <span className="text-fg">{(todayMacros.waterMl / 1000).toFixed(1)}L</span> {t('water')}
+          </p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="h2 mb-3">{t('suggestions')}</h2>
+        <div className="space-y-3">
+          {!sug && <Skeleton h={72} />}
+          {sug && !sug.suggestions.length && <div className="card text-lg text-muted">{t('no_suggestions')}</div>}
+          {sug?.suggestions.map((s) => (
+            <div key={s.id} className={`card flex items-start gap-3 border-l-[6px] ${prColor[s.priority]}`}>
+              <p className="flex-1 text-[18px] font-semibold leading-snug">{s.message}</p>
+              <button aria-label="Dismiss" onClick={() => dismiss(s)} className="-mr-2 -mt-2 flex h-12 w-12 shrink-0 items-center justify-center text-muted">{Icon.close}</button>
+            </div>
+          ))}
+          {settings.aiEnabled && (
+            <div className="card">
+              {ai.text ? <div className="whitespace-pre-wrap text-[17px] leading-relaxed">{ai.text}</div> : ai.err ? <p className="text-muted">{ai.err}</p> : null}
+              <button onClick={askAi} disabled={ai.busy} className={`btn-secondary w-full ${ai.text || ai.err ? 'mt-4' : ''}`}>{Icon.sparkle}{ai.busy ? t('ai_thinking') : t('ask_ai')}</button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {recent.length > 0 && (
+        <section>
+          <h2 className="h2 mb-3">{t('history')}</h2>
+          <div className="space-y-2">
+            {recent.map((s) => (
+              <button key={s.id} onClick={() => nav(`/sessions/${s.id}`)} className="card flex w-full items-center justify-between !py-4 text-left">
+                <span><span className="block text-lg font-bold">{s.name || 'Workout'}</span><span className="text-muted">{new Date(s.date).toLocaleDateString()} · {s.sets.length} sets</span></span>
+                <span className="text-muted">{Icon.chevron}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <Sheet open={sheet === 'weight'} onClose={() => setSheet(null)} title={t('log_weight')}>
+        <Stepper big value={weight} onChange={setWeight} step={u.imp ? 0.5 : 0.1} unit={u.wUnit} />
+        <button onClick={saveWeight} className="btn-primary btn-xl mt-6 w-full">{t('save')}</button>
+      </Sheet>
+      <Sheet open={sheet === 'sleep'} onClose={() => setSheet(null)} title={t('log_sleep')}>
+        <Stepper big value={sleepH} onChange={setSleepH} step={0.5} unit="h" />
+        <button onClick={saveSleep} className="btn-primary btn-xl mt-6 w-full">{t('save')}</button>
+      </Sheet>
+      {toast && <div role="status" className="fixed inset-x-0 top-6 z-50 mx-auto w-fit rounded-2xl bg-success px-6 py-3 text-lg font-bold text-black">{toast}</div>}
+    </div>
+  );
+}
