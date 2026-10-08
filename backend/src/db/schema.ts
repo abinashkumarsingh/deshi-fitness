@@ -44,6 +44,9 @@ export const exercises = pgTable('exercises', {
   isCustom: boolean('is_custom').notNull().default(false),
   variationOf: text('variation_of'),
   videoUrl: text('video_url'),
+  secondaryMuscles: jsonb('secondary_muscles').$type<string[]>(),
+  instructions: jsonb('instructions').$type<string[]>(),
+  images: jsonb('images').$type<string[]>(),
   userId: text('user_id'),
 }, (t) => [index('exercises_user_idx').on(t.userId), uniqueIndex('exercises_slug_idx').on(t.slug)]);
 
