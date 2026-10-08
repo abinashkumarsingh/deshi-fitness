@@ -2,9 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { sql, isNull } from 'drizzle-orm';
+import { sql, isNull, and, eq } from 'drizzle-orm';
 import { db, pool, runMigrations, schema } from './db';
-import { seedExercises } from './data/exercises';
+import { seedExercises, curatedDetailsFrom } from './data/exercises';
+import exerciseDb from './data/exercise-db.json';
 import { requireAuth } from './services/auth';
 import { errorHandler } from './services/util';
 import authRouter from './routes/auth';
@@ -17,11 +18,30 @@ import {
 } from './routes/misc';
 
 async function seed() {
-  const existing = await db.select({ slug: schema.exercises.slug }).from(schema.exercises).where(isNull(schema.exercises.userId));
+  const existing = await db.select({ slug: schema.exercises.slug, name: schema.exercises.name }).from(schema.exercises).where(isNull(schema.exercises.userId));
   const have = new Set(existing.map((e) => e.slug));
-  const missing = seedExercises.filter((e) => !have.has(e.slug));
-  if (missing.length) await db.insert(schema.exercises).values(missing);
-  if (missing.length) console.log(`Seeded ${missing.length} exercises`);
+  const norm = (n: string) => n.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const curated = seedExercises.filter((e) => !have.has(e.slug));
+  const names = new Set([...existing.map((e) => norm(e.name)), ...seedExercises.map((e) => norm(e.name))]);
+  // Open public-domain exercise library (free-exercise-db, Unlicense)
+  const imported = (exerciseDb as { slug: string; name: string; category: string; muscleGroup: string; equipment: string; difficulty: string | null; type: string; tracking: string; secondary: string[]; instructions: string[]; images: string[] }[])
+    .filter((e) => !have.has(e.slug) && !names.has(norm(e.name)))
+    .map(({ secondary, ...e }) => ({ ...e, secondaryMuscles: secondary, nameDesi: null }));
+  const rows = [...curated, ...imported];
+  for (let i = 0; i < rows.length; i += 200) await db.insert(schema.exercises).values(rows.slice(i, i + 200));
+  if (rows.length) console.log(`Seeded ${curated.length} curated + ${imported.length} library exercises`);
+
+  // Give curated lifts the instructions/images of their library twin (only where missing)
+  const lib = new Map((exerciseDb as { slug: string; instructions: string[]; images: string[]; secondary: string[] }[]).map((e) => [e.slug, e]));
+  let enriched = 0;
+  for (const [slug, src] of Object.entries(curatedDetailsFrom)) {
+    const e = lib.get('fedb:' + src);
+    if (!e) continue;
+    const r = await db.update(schema.exercises).set({ instructions: e.instructions, images: e.images, secondaryMuscles: e.secondary })
+      .where(and(eq(schema.exercises.slug, slug), isNull(schema.exercises.instructions))).returning({ id: schema.exercises.id });
+    enriched += r.length;
+  }
+  if (enriched) console.log(`Added instructions & images to ${enriched} curated exercises`);
 }
 
 async function main() {
