@@ -5,6 +5,8 @@ import { useStore, useT, useUnits, exName } from '../lib/store';
 import { Empty, ExercisePicker, Icon, PageHeader, Skeleton } from '../components/ui';
 import type { Routine, RoutineExercise } from '../lib/types';
 
+const LABEL: Record<string, string> = { emom: 'EMOM', amrap: 'AMRAP', hiit: 'HIIT' };
+const lbl = (s: string) => LABEL[s] || s.charAt(0).toUpperCase() + s.slice(1);
 const TYPES = ['strength', 'bodybuilding', 'emom', 'amrap', 'tabata', 'hiit', 'sprint', 'boxing', 'circuit', 'pyramid', 'ladder', 'freeform'];
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -17,7 +19,7 @@ export default function Routines() {
   const dup = async (id: string) => { await api(`/routines/${id}/duplicate`, { method: 'POST' }); load(); };
   return (
     <div className="space-y-3">
-      <PageHeader title={t('routines')} back right={<button className="chip" onClick={() => nav('/routines/new')}>+ {t('new_routine')}</button>} />
+      <PageHeader title={t('routines')} back right={<button className="chip shrink-0" onClick={() => nav('/routines/new')}>+ New</button>} />
       {!list && <Skeleton />}
       {list?.length === 0 && <Empty>{t('no_data')}</Empty>}
       {list?.map((r) => (
@@ -26,9 +28,9 @@ export default function Routines() {
             <div className="text-xl font-extrabold">{r.name}</div>
             <div className="text-[15px] capitalize text-muted">{r.type} · {r.blocks.map((b) => `${b.name} (${b.exercises.length})`).join(' → ')}</div>
           </button>
-          <div className="mt-3 flex items-center justify-between">
-            <div className="flex gap-1">{DAYS.map((d, i) => <span key={i} className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${r.days.includes(i) ? 'bg-accent text-on-accent' : 'bg-elevated text-muted'}`}>{d}</span>)}</div>
-            <button className="chip" onClick={() => dup(r.id)}>{t('duplicate')}</button>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex gap-1">{DAYS.map((d, i) => <span key={i} className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-bold ${r.days.includes(i) ? 'chip-on' : 'bg-elevated text-muted'}`}>{d}</span>)}</div>
+            <button className="chip ml-auto" onClick={() => dup(r.id)}>{t('duplicate')}</button>
           </div>
         </div>
       ))}
@@ -73,10 +75,10 @@ export function RoutineEditor() {
       <PageHeader title={id === 'new' ? t('new_routine') : t('edit')} back right={id !== 'new' ? <button aria-label={t('delete')} className="flex h-12 w-12 items-center justify-center text-danger" onClick={del}>{Icon.trash}</button> : undefined} />
       <div className="card space-y-4">
         <div><label className="label" htmlFor="rn">{t('routine_name')}</label><input id="rn" className="input" value={r.name} onChange={(e) => setR({ ...r, name: e.target.value })} placeholder="Push Day" /></div>
-        <div><div className="label">Type</div><div className="flex flex-wrap gap-2">{TYPES.map((x) => <button key={x} onClick={() => setR({ ...r, type: x })} className={`chip capitalize ${r.type === x ? 'chip-on' : ''}`}>{x}</button>)}</div></div>
+        <div><div className="label">Type</div><div className="flex flex-wrap gap-2">{TYPES.map((x) => <button key={x} onClick={() => setR({ ...r, type: x })} className={`chip ${r.type === x ? 'chip-on' : ''}`}>{lbl(x)}</button>)}</div></div>
         <div><div className="label">{t('schedule')}</div><div className="flex gap-2">{DAYS.map((d, i) => (
           <button key={i} aria-pressed={r.days.includes(i)} aria-label={['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i]} onClick={() => setR({ ...r, days: r.days.includes(i) ? r.days.filter((x) => x !== i) : [...r.days, i] })}
-            className={`flex h-12 flex-1 items-center justify-center rounded-xl font-bold ${r.days.includes(i) ? 'bg-accent text-on-accent' : 'bg-elevated text-muted'}`}>{d}</button>
+            className={`flex h-12 flex-1 items-center justify-center rounded-xl font-bold ${r.days.includes(i) ? 'chip-on' : 'bg-elevated text-muted'}`}>{d}</button>
         ))}</div></div>
       </div>
 

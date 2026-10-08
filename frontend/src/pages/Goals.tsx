@@ -45,10 +45,10 @@ export default function Goals() {
       <div className="card">
         <div className="text-[14px] font-semibold uppercase text-muted">{p === 'primary' ? t('primary_goal') : t('secondary_goal')}</div>
         {g ? <>
-          <div className="mt-1 text-[32px] font-extrabold text-accent">{label(g.type)}</div>
+          <div className="display mt-1 text-[24px] grad-text">{label(g.type)}</div>
           <div className="text-lg font-semibold">Week {week}{totalW ? ` of ${totalW}` : ''}{evDays !== null ? ` · ${evDays} days to event` : ''}</div>
           {g.targetWeight && <div className="text-muted">{t('target_weight')}: {u.show(g.targetWeight)} {u.wUnit}</div>}
-          {totalW && <div className="mt-3 h-3 overflow-hidden rounded-full bg-elevated"><div className="h-full bg-accent" style={{ width: `${Math.min(100, (week / totalW) * 100)}%` }} /></div>}
+          {totalW && <div className="mt-3 h-3 overflow-hidden rounded-full bg-elevated"><div className="h-full bg-grad" style={{ width: `${Math.min(100, (week / totalW) * 100)}%` }} /></div>}
           <div className="mt-4 grid grid-cols-2 gap-2"><button className="btn-secondary" onClick={() => open(p)}>{t('edit')}</button><button className="btn-ghost text-muted" onClick={() => end(g)}>End</button></div>
         </> : <button className="btn-primary mt-3 w-full" onClick={() => open(p)}>{Icon.plus}{t('set_goal')}</button>}
       </div>

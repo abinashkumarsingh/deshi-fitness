@@ -45,7 +45,7 @@ export default function Body() {
       )}
       <div className="card space-y-4">
         <Stepper big value={w} onChange={setW} step={u.imp ? 0.5 : 0.1} unit={u.wUnit} label={t('weight')} />
-        <button className="btn-ghost w-full text-muted" onClick={() => setMore(!more)}>{more ? '−' : '+'} {t('body_fat')} & measurements (cm)</button>
+        <button className="btn-ghost w-full text-muted" onClick={() => setMore(!more)}>{more ? '−' : '+'} Body fat & measurements</button>
         {more && (
           <div className="grid grid-cols-2 gap-3">
             <div><label className="label">{t('body_fat')}</label><input inputMode="decimal" className="input" value={bf} onChange={(e) => setBf(e.target.value)} /></div>

@@ -65,7 +65,7 @@ export default function Train() {
       {active && <button onClick={() => nav('/workout')} className="btn-primary btn-xl w-full">● {active.name} — {t('resume')}</button>}
       <div className="grid grid-cols-2 gap-3">
         <button disabled={busy} className="btn-secondary" onClick={() => begin({ startedAt: Date.now(), name: 'Workout', exercises: [], current: 0 })}>{t('empty_session')}</button>
-        <button disabled={busy} className="btn-secondary" onClick={copyLast}>{t('copy_last')}</button>
+        <button disabled={busy} className="btn-secondary" onClick={copyLast}>Copy last</button>
       </div>
 
       <section>

@@ -37,8 +37,8 @@ export default function Sleep() {
       </div>
       <div className="card space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <div><label className="label" htmlFor="bed">{t('bedtime')}</label><input id="bed" type="time" className="input" value={bed} onChange={(e) => { setBed(e.target.value); setHours(hoursBetween(e.target.value, wake)); }} /></div>
-          <div><label className="label" htmlFor="wake">{t('wake_time')}</label><input id="wake" type="time" className="input" value={wake} onChange={(e) => { setWake(e.target.value); setHours(hoursBetween(bed, e.target.value)); }} /></div>
+          <div><label className="label" htmlFor="bed">{t('bedtime')}</label><input id="bed" type="time" className="input !px-3 !text-base" value={bed} onChange={(e) => { setBed(e.target.value); setHours(hoursBetween(e.target.value, wake)); }} /></div>
+          <div><label className="label" htmlFor="wake">{t('wake_time')}</label><input id="wake" type="time" className="input !px-3 !text-base" value={wake} onChange={(e) => { setWake(e.target.value); setHours(hoursBetween(bed, e.target.value)); }} /></div>
         </div>
         <Stepper big value={hours} onChange={setHours} step={0.25} unit="h" label={t('hours')} />
         <div>

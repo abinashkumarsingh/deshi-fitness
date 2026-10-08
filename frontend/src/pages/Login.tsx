@@ -33,7 +33,7 @@ export default function Login() {
   return (
     <div className="mx-auto flex min-h-full max-w-md flex-col justify-center px-4 py-10">
       <div className="mb-10">
-        <div className="num text-[56px] leading-none">Deshi<span className="text-accent">.</span></div>
+        <div className="display text-[48px] leading-none">Deshi<span className="grad-text">.</span></div>
         <p className="mt-2 text-xl text-muted">Fitness tracker · Log it, lift it.</p>
       </div>
       <form onSubmit={submit} className="space-y-4">

@@ -4,6 +4,8 @@ import { fmtTime, useStore, useT } from '../lib/store';
 import { beep, keepAwake, say, unlockAudio, vibrate } from '../lib/feedback';
 import { Icon, Stepper } from '../components/ui';
 
+const LABEL: Record<string, string> = { emom: 'EMOM', amrap: 'AMRAP', hiit: 'HIIT' };
+const lbl = (s: string) => LABEL[s] || s.charAt(0).toUpperCase() + s.slice(1);
 type TType = 'stopwatch' | 'countdown' | 'interval' | 'tabata' | 'emom' | 'boxing' | 'amrap' | 'pyramid';
 interface Cfg { work: number; rest: number; rounds: number; total: number; prep: number }
 interface Phase { kind: 'prep' | 'work' | 'rest'; sec: number; round: number }
@@ -87,25 +89,25 @@ export default function Timer() {
 
   const types: TType[] = ['tabata', 'emom', 'interval', 'boxing', 'amrap', 'countdown', 'stopwatch', 'pyramid'];
   const display = type === 'stopwatch' ? elapsed : finished ? 0 : left;
-  const color = ph?.kind === 'rest' ? 'text-success' : ph?.kind === 'prep' ? 'text-warning' : 'text-fg';
+  const color = ph?.kind === 'rest' ? 'text-[#4BE3B0]' : ph?.kind === 'prep' ? 'text-[#FACC15]' : 'text-white';
   const phaseLabel = finished ? t('done') : ph?.kind === 'rest' ? t('rest') : ph?.kind === 'prep' ? 'Ready' : startAt ? t('work') : '';
   const progress = ph ? 1 - left / ph.sec : finished ? 1 : 0;
 
   if (full && startAt) {
     return (
-      <div className="fixed inset-0 z-40 flex flex-col bg-bg px-6 pb-[calc(env(safe-area-inset-bottom)+24px)] pt-[max(16px,env(safe-area-inset-top))]">
+      <div className="focus-panel fixed inset-0 z-40 flex flex-col px-6 pb-[calc(env(safe-area-inset-bottom)+24px)] pt-[max(16px,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold uppercase text-muted">{type}</span>
+          <span className="text-xl font-bold uppercase text-white/60">{lbl(type)}</span>
           <button aria-label="Exit full screen" onClick={() => setFull(false)} className="flex h-14 w-14 items-center justify-center">{Icon.close}</button>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center text-center" aria-live="polite">
-          <div className={`text-[32px] font-extrabold uppercase tracking-widest ${ph?.kind === 'rest' ? 'text-success' : 'text-accent'}`}>{phaseLabel}</div>
-          <div className={`num my-3 text-[120px] leading-none sm:text-[180px] ${color} ${running ? 'tick' : ''}`}>{fmtTime(display)}</div>
-          {type !== 'stopwatch' && totalRounds > 1 && <div className="text-[32px] font-bold text-accent">{t('round').toUpperCase()} {Math.max(1, ph?.round || (finished ? totalRounds : 1))} / {totalRounds}</div>}
-          {type !== 'stopwatch' && <div className="mt-8 h-3 w-full overflow-hidden rounded-full bg-elevated"><div className={`h-full ${ph?.kind === 'rest' ? 'bg-success' : 'bg-accent'}`} style={{ width: `${progress * 100}%` }} /></div>}
+          <div className={`text-[32px] font-extrabold uppercase tracking-widest ${ph?.kind === 'rest' ? 'text-[#4BE3B0]' : 'text-[#D4FF3A]'}`}>{phaseLabel}</div>
+          <div className={`num my-3 text-[84px] leading-none sm:text-[150px] ${color} ${running ? 'tick' : ''}`}>{fmtTime(display)}</div>
+          {type !== 'stopwatch' && totalRounds > 1 && <div className="num text-[26px] text-[#D4FF3A]">{t('round').toUpperCase()} {Math.max(1, ph?.round || (finished ? totalRounds : 1))} / {totalRounds}</div>}
+          {type !== 'stopwatch' && <div className="mt-8 h-3 w-full overflow-hidden rounded-full bg-white/10"><div className={`h-full ${ph?.kind === 'rest' ? 'bg-[#4BE3B0]' : 'bg-grad'}`} style={{ width: `${progress * 100}%` }} /></div>}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={reset} className="btn-secondary btn-xl">{t('reset')}</button>
+          <button onClick={reset} className="btn btn-xl bg-white/10 text-white">{t('reset')}</button>
           {finished ? <button onClick={start} className="btn-primary btn-xl">{t('start')}</button>
             : running ? <button onClick={pause} className="btn-primary btn-xl">{t('pause')}</button>
               : <button onClick={resume} className="btn-primary btn-xl">{t('resume')}</button>}
@@ -117,8 +119,8 @@ export default function Timer() {
   return (
     <div className="space-y-6">
       <h1 className="h1 pt-2">{t('timer')}</h1>
-      <div className="flex flex-wrap gap-2">{types.map((ty) => <button key={ty} onClick={() => pick(ty)} className={`chip capitalize ${type === ty ? 'chip-on' : ''}`}>{ty}</button>)}</div>
-      {startAt && <button onClick={() => setFull(true)} className="card w-full text-center"><div className="num text-[64px] text-accent">{fmtTime(display)}</div><div className="text-muted">{phaseLabel} · tap for full screen</div></button>}
+      <div className="flex flex-wrap gap-2">{types.map((ty) => <button key={ty} onClick={() => pick(ty)} className={`chip ${type === ty ? 'chip-on' : ''}`}>{lbl(ty)}</button>)}</div>
+      {startAt && <button onClick={() => setFull(true)} className="card w-full text-center"><div className="num grad-text text-[48px]">{fmtTime(display)}</div><div className="text-muted">{phaseLabel} · tap for full screen</div></button>}
       <div className="card space-y-5">
         {(type === 'countdown' || type === 'amrap') && <Stepper value={cfg.total / 60} onChange={(v) => setCfg({ ...cfg, total: Math.round(v * 60) })} step={1} min={1} unit={t('min')} label={t('min')} />}
         {['interval', 'tabata', 'emom', 'boxing', 'pyramid'].includes(type) && <>

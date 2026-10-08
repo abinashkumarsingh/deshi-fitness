@@ -71,7 +71,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <header className="pt-2">
         <p className="text-lg font-semibold text-muted">{greet}{auth?.user.name ? `, ${auth.user.name.split(' ')[0]}` : ''}</p>
-        <h1 className="num text-[44px] leading-tight">{new Date().toLocaleDateString(settings.languageMode === 'en' ? 'en-IN' : 'en-IN', { weekday: 'long' })}</h1>
+        <h1 className="display text-[34px] leading-tight">{new Date().toLocaleDateString(settings.languageMode === 'en' ? 'en-IN' : 'en-IN', { weekday: 'long' })}</h1>
         {c?.goalType && <p className="text-lg font-semibold capitalize text-accent">{c.goalType.replace(/_/g, ' ')}{c.daysToEvent !== null && c.daysToEvent > 0 ? ` · ${c.daysToEvent}d to go` : ''}</p>}
       </header>
 
@@ -86,10 +86,15 @@ export default function Dashboard() {
 
       <section className="space-y-3">
         {todays.map((r) => (
-          <button key={r.id} onClick={() => nav('/train', { state: { start: r.id } })} className="card flex w-full items-center justify-between !border-accent text-left">
-            <span><span className="block text-[15px] font-semibold uppercase text-accent">{t('today')}</span><span className="text-2xl font-extrabold">{r.name}</span></span>
-            <span className="text-accent">{Icon.chevron}</span>
-          </button>
+          <div key={r.id} className="bg-grad rounded-3xl p-5 text-[#0C1210]">
+            <div className="text-[13px] font-bold uppercase tracking-widest">{t('today')} · {r.type}</div>
+            <div className="display mt-1 text-[24px] leading-tight">{r.name}</div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-white/45 px-3 py-2"><div className="text-[12px] font-bold uppercase tracking-wider">Exercises</div><div className="num text-[22px]">{r.blocks.reduce((a, b) => a + b.exercises.length, 0)}</div></div>
+              <div className="rounded-2xl bg-white/45 px-3 py-2"><div className="text-[12px] font-bold uppercase tracking-wider">Blocks</div><div className="num text-[22px]">{r.blocks.length}</div></div>
+            </div>
+            <button onClick={() => nav('/train', { state: { start: r.id } })} className="btn mt-3 w-full bg-[#0C1210] text-white">{t('start')} →</button>
+          </div>
         ))}
         <button onClick={() => nav('/train')} className="btn-primary btn-xl w-full">{Icon.dumbbell}{t('start_workout')}</button>
       </section>
@@ -100,7 +105,7 @@ export default function Dashboard() {
           <button className="btn-secondary" onClick={() => setSheet('weight')}>⚖️ {t('log_weight')}</button>
           <button className="btn-secondary" onClick={() => setSheet('sleep')}>😴 {t('log_sleep')}</button>
           <button className="btn-secondary" onClick={() => nav('/food')}>🍛 {t('log_food')}</button>
-          <button className="btn-secondary" onClick={addWater}>💧 {t('log_water')}</button>
+          <button className="btn-secondary whitespace-nowrap" onClick={addWater}>💧 +250ml</button>
         </div>
         {todayMacros && (
           <p className="mt-3 text-[16px] font-semibold text-muted">
@@ -131,7 +136,7 @@ export default function Dashboard() {
                       <li key={i} className="flex gap-3">
                         <span className="num mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-elevated text-base">{i + 1}</span>
                         <span>
-                          <span className="block text-lg font-bold">{p.name} <span className="font-semibold text-accent">{p.sets}×{p.reps ?? (p.durationSec ? `${p.durationSec}s` : '')}{p.weight ? ` · ${u.show(p.weight)}${u.wUnit}` : ''}</span></span>
+                          <span className="block text-lg font-bold">{p.name} <span className="font-semibold text-accent whitespace-nowrap">{p.sets}×{p.reps ?? (p.durationSec ? `${p.durationSec}s` : '')}{p.weight ? ` · ${u.show(p.weight)}${u.wUnit}` : ''}</span></span>
                           <span className="text-[15px] text-muted">{p.reason}</span>
                         </span>
                       </li>
@@ -140,7 +145,7 @@ export default function Dashboard() {
                   <button onClick={startPlan} className="btn-primary mt-4 w-full">{Icon.dumbbell}{t('start_plan')}</button>
                 </div>
               ) : ai.text ? <div className="whitespace-pre-wrap text-[17px] leading-relaxed">{ai.text}</div> : ai.err ? <p className="text-muted">{ai.err}</p> : null}
-              <button onClick={askAi} disabled={ai.busy} className={`btn-secondary w-full ${ai.text || ai.err || ai.plan?.length ? 'mt-3' : ''}`}>{Icon.sparkle}{ai.busy ? t('ai_thinking') : ai.plan?.length ? 'Suggest again' : t('ask_ai')}</button>
+              <button onClick={askAi} disabled={ai.busy} className={`btn-secondary w-full ${ai.text || ai.err || ai.plan?.length ? 'mt-3' : ''}`}>{Icon.sparkle}{ai.busy ? t('ai_thinking') : ai.plan?.length ? 'Suggest again' : 'Suggest exercises'}</button>
             </div>
           )}
         </div>

@@ -130,25 +130,25 @@ export default function Workout() {
 
       {/* main glanceable area */}
       {active.restUntil && restLeft > 0 ? (
-        <section className="flex flex-1 flex-col items-center justify-center py-6 text-center" aria-live="polite">
-          <div className="text-2xl font-bold uppercase tracking-widest text-muted">{t('rest')}</div>
-          <div className="num tick my-2 text-[112px] leading-none text-accent sm:text-[128px]">{fmtTime(restLeft)}</div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-elevated"><div className="h-full bg-accent transition-[width] duration-200" style={{ width: `${100 - (restLeft / (active.restTotal || 90)) * 100}%` }} /></div>
+        <section className="focus-panel -mx-1 mt-2 flex flex-1 flex-col items-center justify-center rounded-[28px] px-5 py-6 text-center" aria-live="polite">
+          <div className="text-2xl font-bold uppercase tracking-[0.25em] text-white/70">{t('rest')}</div>
+          <div className="num tick grad-text my-3 text-[84px] leading-none sm:text-[112px]">{fmtTime(restLeft)}</div>
+          <div className="h-3 w-full overflow-hidden rounded-full bg-white/10"><div className="bg-grad h-full transition-[width] duration-200" style={{ width: `${100 - (restLeft / (active.restTotal || 90)) * 100}%` }} /></div>
           {nextLabel && <div className="mt-6 text-2xl font-semibold">{t('next')}: {nextLabel}</div>}
           <div className="mt-6 flex gap-3">
-            <button className="btn-secondary" onClick={() => addRest(-15)}>−15s</button>
-            <button className="btn-secondary" onClick={() => addRest(30)}>+30s</button>
+            <button className="btn bg-white/10 text-white" onClick={() => addRest(-15)}>−15s</button>
+            <button className="btn bg-white/10 text-white" onClick={() => addRest(30)}>+30s</button>
           </div>
           <div className="flex-1" />
-          <button onClick={() => setActive((a) => ({ ...a, restUntil: null }))} className="btn-secondary btn-xl mt-6 w-full">{t('skip_rest')}</button>
+          <button onClick={() => setActive((a) => ({ ...a, restUntil: null }))} className="btn-primary btn-xl mt-6 w-full">{t('skip_rest')}</button>
         </section>
       ) : cur ? (
         <section className="flex flex-1 flex-col py-4">
-          <h1 className="text-center text-[34px] font-extrabold leading-tight sm:text-[40px]">{exName(ex, settings.languageMode)}</h1>
-          <div className="mt-1 text-center text-[28px] font-bold text-accent">{t('set')} {setNo}{targetSets ? ` / ${targetSets}` : ''}</div>
+          <h1 className="display text-center text-[28px] leading-tight sm:text-[34px]">{exName(ex, settings.languageMode)}</h1>
+          <div className="num grad-text mt-2 text-center text-[24px]">{t('set')} {setNo}{targetSets ? ` / ${targetSets}` : ''}</div>
           <div className="mt-6 space-y-6">
             {tracking === 'weight_reps' && <Stepper big value={w} onChange={setW} step={u.step} unit={u.wUnit} label={t('weight')} />}
-            {(tracking === 'weight_reps' || tracking === 'reps') && <Stepper value={reps} onChange={setReps} step={1} unit={t('reps')} label={t('reps')} />}
+            {(tracking === 'weight_reps' || tracking === 'reps') && <Stepper value={reps} onChange={setReps} step={1} unit={t('reps')} label="Reps" />}
             {tracking === 'distance_time' && <Stepper big value={dist} onChange={setDist} step={50} unit="m" label="Distance" />}
             {(tracking === 'time' || tracking === 'distance_time') && <Stepper big={tracking === 'time'} value={dur} onChange={setDur} step={tracking === 'time' ? 15 : 1} unit={t('sec')} label={`${t('sec')} (${fmtTime(dur)})`} />}
             <div>
@@ -223,7 +223,7 @@ function PRScreen({ prs, onDone }: { prs: PR[]; onDone: () => void }) {
           <li key={p.id} className="card text-left">
             <div className="text-lg font-bold">{exMap[p.exerciseId]?.name}</div>
             <div className="text-muted">{label[p.type] || p.type.replace(/_/g, ' ')}</div>
-            <div className="num text-[40px] text-accent">{p.unit === 'kg' ? `${u.show(p.value)} ${u.wUnit}` : p.unit === 'sec' ? fmtTime(p.value) : `${p.value} ${p.unit || ''}`}</div>
+            <div className="num grad-text text-[34px]">{p.unit === 'kg' ? `${u.show(p.value)} ${u.wUnit}` : p.unit === 'sec' ? fmtTime(p.value) : `${p.value} ${p.unit || ''}`}</div>
             {p.previous != null && <div className="text-muted">prev {p.unit === 'kg' ? `${u.show(p.previous)} ${u.wUnit}` : p.unit === 'sec' ? fmtTime(p.previous) : p.previous}</div>}
           </li>
         ))}

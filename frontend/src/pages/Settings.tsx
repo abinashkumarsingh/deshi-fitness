@@ -30,7 +30,7 @@ export default function SettingsPage() {
       </>)}
       {row(t('ai_enabled'), <>
         <Segmented value={settings.aiEnabled ? 'on' : 'off'} onChange={(v) => updateSettings({ aiEnabled: v === 'on' })} options={[{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }]} />
-        {settings.aiAvailable === false && <p className="text-[15px] text-muted">{t('ai_unavailable')} (GEMINI_API_KEY)</p>}
+        {settings.aiAvailable === false && <p className="text-[15px] text-muted">{t('ai_unavailable')} Add OPENROUTER_API_KEY or GEMINI_API_KEY to the backend.</p>}
       </>)}
       {row(t('export'), <div className="grid grid-cols-2 gap-2">
         <button className="btn-secondary" onClick={() => download('/export?format=csv', 'deshi-workouts.csv')}>CSV</button>

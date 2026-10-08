@@ -58,7 +58,7 @@ export default function Food() {
         <div className="col-span-2">
           <Meter label={t('water')} v={+(tot.w / 1000).toFixed(2)} target={wT / 1000} unit="L" color="bg-info" />
           <div className="mt-3 grid grid-cols-3 gap-2">
-            {[250, 500, 1000].map((ml) => <button key={ml} className="btn-secondary !min-h-[48px] !text-base" onClick={() => water(ml)}>💧 +{ml >= 1000 ? '1L' : `${ml}ml`}</button>)}
+            {[250, 500, 1000].map((ml) => <button key={ml} className="btn-secondary !min-h-[48px] whitespace-nowrap !gap-1 !px-2 !text-[15px]" onClick={() => water(ml)}>💧 +{ml >= 1000 ? '1L' : `${ml}ml`}</button>)}
           </div>
         </div>
       </div>
@@ -116,12 +116,12 @@ export default function Food() {
   );
 }
 
-function Meter({ label, v, target, unit, color = 'bg-accent' }: { label: string; v: number; target?: number | null; unit: string; color?: string }) {
+function Meter({ label, v, target, unit, color = 'bg-grad' }: { label: string; v: number; target?: number | null; unit: string; color?: string }) {
   const pct = target ? Math.min(100, (v / target) * 100) : 0;
   return (
     <div>
       <div className="text-[14px] font-semibold uppercase text-muted">{label}</div>
-      <div className="num text-[36px] leading-tight">{v}<span className="ml-1 text-base font-semibold text-muted">{target ? `/ ${target}` : ''} {unit}</span></div>
+      <div className="flex flex-wrap items-baseline gap-x-1.5"><span className="num text-[30px] leading-tight">{v}</span><span className="whitespace-nowrap text-[14px] font-semibold text-muted">{target ? `/ ${target} ` : ''}{unit}</span></div>
       {target ? <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-elevated"><div className={`h-full ${color}`} style={{ width: `${pct}%` }} /></div> : null}
     </div>
   );

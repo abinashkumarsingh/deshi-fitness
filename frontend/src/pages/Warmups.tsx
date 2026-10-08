@@ -29,7 +29,7 @@ export default function Warmups() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={t('warmups')} back />
+      <PageHeader title="Warm-ups" back />
       <Segmented value={tab} onChange={setTab} options={[{ value: 'ramp', label: 'Ramp-up' }, { value: 'warmup', label: t('warmup') }, { value: 'cooldown', label: t('cooldown') }, { value: 'mobility', label: t('mobility') }]} />
       {tab === 'ramp' ? (
         <>
@@ -44,7 +44,7 @@ export default function Warmups() {
             {ramp.map((s, i) => (
               <li key={i} className={`card flex items-center justify-between !py-4 ${s.label === 'Work' ? '!border-accent' : ''}`}>
                 <span className="w-20 text-lg font-bold text-muted">{s.label}</span>
-                <span className={`num text-[36px] ${s.label === 'Work' ? 'text-accent' : ''}`}>{u.show(s.weight)}<span className="text-lg text-muted"> {u.wUnit}</span> × {s.reps}</span>
+                <span className={`num text-[28px] ${s.label === 'Work' ? 'grad-text' : ''}`}>{u.show(s.weight)}<span className="text-lg text-muted"> {u.wUnit}</span> × {s.reps}</span>
               </li>
             ))}
           </ol>
@@ -92,8 +92,8 @@ function FlowRunner({ flow, onClose }: { flow: Flow; onClose: () => void }) {
       <div className="flex items-center justify-between"><span className="text-lg font-bold text-muted">{flow.name} · {i + 1}/{flow.steps.length}</span><button className="chip" onClick={onClose}>{t('cancel')}</button></div>
       <div className="flex flex-1 flex-col items-center justify-center text-center">
         <h1 className="text-[36px] font-extrabold leading-tight">{step.name}</h1>
-        {step.durationSec ? <div className="num my-4 text-[112px] leading-none text-accent">{fmtTime(left)}</div>
-          : <div className="num my-4 text-[80px] text-accent">{step.reps ? `×${step.reps}` : '—'}</div>}
+        {step.durationSec ? <div className="num grad-text my-4 text-[84px] leading-none">{fmtTime(left)}</div>
+          : <div className="num grad-text my-4 text-[64px]">{step.reps ? `×${step.reps}` : '—'}</div>}
         {step.note && <p className="text-xl text-muted">{step.note}</p>}
         {flow.steps[i + 1] && <p className="mt-6 text-xl">{t('next')}: {flow.steps[i + 1].name}</p>}
       </div>

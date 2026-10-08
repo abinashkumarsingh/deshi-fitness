@@ -63,7 +63,7 @@ function PRBoard() {
           <button key={exId} onClick={() => setSel(sel === exId ? null : exId)} className="card w-full text-left">
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-xl font-bold">{exMap[exId]?.name || 'Exercise'}</span>
-              <span className="num text-[32px] text-accent">{fmtPR(main, u)}</span>
+              <span className="num shrink-0 text-[26px] grad-text">{fmtPR(main, u)}</span>
             </div>
             <div className="mt-1 flex flex-wrap gap-x-4 text-[15px] text-muted">
               {prs.filter((p) => p !== main).map((p) => <span key={p.id}>{PR_LABEL[p.type] || p.type.replace(/_/g, ' ')}: <b className="text-fg">{fmtPR(p, u)}</b></span>)}
