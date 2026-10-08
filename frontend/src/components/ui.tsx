@@ -99,45 +99,42 @@ export function Stepper({ value, onChange, step = 1, min = 0, label, unit, big }
   useEffect(() => setText(String(value)), [value]);
   const set = (v: number) => onChange(Math.max(min, Math.round(v * 100) / 100));
 
-  // Auto-fit: measure the number at 100px and scale it to the space between the +/- buttons,
-  // so 1-, 3- or 5-character values (5, 102.5, 1000) always fit and stay centred.
+  // One cohesive control: a rounded track with inset +/- buttons, the number centred and the unit
+  // as a small caption underneath (same position for every value, so nothing jumps around).
+  // The number auto-fits the space between the buttons but always keeps breathing room (BREATH px each side).
+  const BREATH = 14;
   const boxRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
-  const unitRef = useRef<HTMLSpanElement>(null);
-  const [fit, setFit] = useState({ font: big ? 60 : 42, width: 0, stacked: false });
-  const maxFont = big ? 64 : 44, minFont = 22, comfy = big ? 46 : 34;
+  const maxFont = big ? 56 : 40, minFont = 22;
+  const [fit, setFit] = useState({ font: maxFont, width: 0 });
   useLayoutEffect(() => {
     const calc = () => {
       const box = boxRef.current, m = measureRef.current;
       if (!box || !m) return;
       const at100 = m.offsetWidth || 1;
-      const fontFor = (avail: number) => Math.max(minFont, Math.min(maxFont, Math.floor((avail * 100) / at100)));
-      // Prefer number + unit side by side; if that makes the number too small, put the unit underneath.
-      const inline = fontFor(box.clientWidth - (unitRef.current?.offsetWidth || 0) - 12);
-      const stacked = unit && inline < comfy;
-      const font = stacked ? fontFor(box.clientWidth - 6) : inline;
-      setFit({ font, width: Math.ceil((at100 * font) / 100) + 4, stacked: !!stacked });
+      const font = Math.max(minFont, Math.min(maxFont, Math.floor(((box.clientWidth - BREATH * 2) * 100) / at100)));
+      setFit({ font, width: Math.ceil((at100 * font) / 100) + 2 });
     };
     calc();
     const ro = new ResizeObserver(calc);
     if (boxRef.current) ro.observe(boxRef.current);
     document.fonts?.ready.then(calc).catch(() => {});
     return () => ro.disconnect();
-  }, [text, unit, big]); // eslint-disable-line
+  }, [text, big]); // eslint-disable-line
 
   return (
     <div>
-      {label && <div className="label text-center">{label}</div>}
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+      {label && <div className="mb-2 text-center text-[14px] font-semibold text-muted">{label}</div>}
+      <div className="stepper-track grid grid-cols-[auto_minmax(0,1fr)_auto] items-center">
         <button aria-label={`Decrease ${label || ''}`} onClick={() => set(value - step)} className="btn-step">{Icon.minus}</button>
-        <div ref={boxRef} className={`relative flex min-w-0 justify-center overflow-hidden ${fit.stacked ? 'flex-col items-center' : 'items-baseline gap-1.5'}`}>
+        <div ref={boxRef} className="relative flex min-w-0 flex-col items-center justify-center overflow-hidden py-1">
           <span ref={measureRef} aria-hidden className="num pointer-events-none invisible absolute left-0 top-0 whitespace-pre" style={{ fontSize: 100, lineHeight: 1 }}>{text || '0'}</span>
           <input inputMode="decimal" aria-label={label} value={text}
             onChange={(e) => { setText(e.target.value); const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(n); }}
             onBlur={() => setText(String(value))}
-            style={{ fontSize: fit.font, width: fit.width || undefined, lineHeight: 1.1 }}
+            style={{ fontSize: fit.font, width: fit.width || undefined, lineHeight: 1 }}
             className="num min-w-0 bg-transparent p-0 text-center outline-none" />
-          {unit && <span ref={unitRef} className={`shrink-0 text-[17px] font-semibold text-muted ${fit.stacked ? '-mt-1 leading-none' : ''}`}>{unit}</span>}
+          {unit && <span className="mt-1.5 text-[11px] font-bold uppercase leading-none tracking-[0.18em] text-muted">{unit}</span>}
         </div>
         <button aria-label={`Increase ${label || ''}`} onClick={() => set(value + step)} className="btn-step">{Icon.plus}</button>
       </div>
