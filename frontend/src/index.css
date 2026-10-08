@@ -2,35 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens (RGB triplets). Dark is default. */
+/* Design tokens — "Lime Aurora". RGB triplets so Tailwind can apply alpha. Dark is default. */
 :root, [data-theme='dark'] {
-  --bg: 10 10 11;
-  --surface: 20 20 22;
-  --elevated: 30 30 33;
-  --line: 42 42 46;
+  --bg: 12 18 16;          /* carbon #0C1210 */
+  --surface: 20 27 24;
+  --elevated: 30 39 35;
+  --line: 44 55 50;
   --fg: 255 255 255;
-  --muted: 161 161 166;
-  --accent: 255 107 26;
-  --on-accent: 10 10 11;
-  --success: 34 197 94;
+  --muted: 163 174 168;
+  --accent: 212 255 58;    /* volt #D4FF3A */
+  --on-accent: 12 18 16;
+  --success: 74 222 128;
   --warning: 250 204 21;
-  --danger: 239 68 68;
-  --info: 59 130 246;
+  --danger: 248 113 113;
+  --info: 96 165 250;
+  --grad: linear-gradient(135deg, #D4FF3A 0%, #4BE3B0 52%, #3D8BFF 100%);
+  --grad-text: linear-gradient(90deg, #D4FF3A, #4BE3B0 60%, #6AA8FF);
+  --nav: 20 27 24;
   color-scheme: dark;
 }
 [data-theme='light'] {
-  --bg: 255 255 255;
-  --surface: 245 245 247;
-  --elevated: 255 255 255;
-  --line: 229 229 231;
-  --fg: 10 10 11;
-  --muted: 82 82 88; /* darker than spec #6B6B70 to keep 7:1 on surface */
-  --accent: 194 65 12; /* deep orange, AAA-safe for large text */
-  --on-accent: 255 255 255;
+  --bg: 244 247 242;       /* mist #F4F7F2 */
+  --surface: 255 255 255;
+  --elevated: 236 242 234;
+  --line: 222 230 219;
+  --fg: 12 18 16;
+  --muted: 70 81 75;       /* ≥7:1 on white */
+  --accent: 8 102 75;      /* deep mint, ≥7:1 on white for text */
+  --on-accent: 12 18 16;
   --success: 21 128 61;
-  --warning: 161 98 7;
+  --warning: 146 88 6;
   --danger: 185 28 28;
   --info: 29 78 216;
+  --grad: linear-gradient(135deg, #D4FF3A 0%, #4BE3B0 52%, #3D8BFF 100%);
+  --grad-text: linear-gradient(90deg, #0B8A5F, #1F6FE0);
+  --nav: 12 18 16;
   color-scheme: light;
 }
 
@@ -42,12 +48,18 @@ body {
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }
-.num { font-family: 'Inter Tight', Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; font-weight: 800; }
+.num, .display { font-family: 'Unbounded Variable', 'Geist Variable', system-ui, sans-serif; font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: -0.02em; }
+.bg-grad { background-image: var(--grad); }
+.grad-text { background-image: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Always-dark "focus" surface for rest/timer screens: maximum contrast from across the room in either theme */
+.focus-panel { background: #0C1210; color: #fff; }
+.focus-panel .grad-text { background-image: linear-gradient(90deg, #D4FF3A, #4BE3B0 60%, #6AA8FF); }
 
 @layer components {
   .card { @apply bg-surface border border-line rounded-3xl p-5; }
+  [data-theme='light'] .card { box-shadow: 0 1px 0 rgba(12,18,16,.03), 0 10px 24px -18px rgba(12,18,16,.25); }
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-2xl font-bold min-h-[56px] px-5 text-lg select-none transition-transform duration-150 active:scale-[0.97] disabled:opacity-40 disabled:active:scale-100; }
-  .btn-primary { @apply btn bg-accent text-on-accent; }
+  .btn-primary { @apply btn text-on-accent; background-image: var(--grad); }
   .btn-secondary { @apply btn bg-elevated text-fg border border-line; }
   .btn-ghost { @apply btn bg-transparent text-fg; }
   .btn-danger { @apply btn bg-danger text-white; }
@@ -55,8 +67,11 @@ body {
   .input { @apply w-full bg-elevated border border-line rounded-xl px-4 min-h-[52px] text-lg text-fg placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent; }
   .label { @apply block text-[15px] font-semibold text-muted mb-1.5; }
   .chip { @apply inline-flex items-center rounded-full px-4 min-h-[44px] font-semibold border border-line bg-elevated text-fg; }
-  .chip-on { @apply bg-accent text-on-accent border-accent; }
-  .h1 { @apply text-[28px] font-extrabold tracking-tight; }
+  .chip-on { background: rgb(12 18 16); color: #D4FF3A; border-color: rgb(12 18 16); }
+  [data-theme='dark'] .chip-on { background: #D4FF3A; color: rgb(12 18 16); border-color: #D4FF3A; }
+  .btn-step { @apply btn !px-0 h-16 w-16 shrink-0 text-[28px]; background: rgb(12 18 16); color: #D4FF3A; }
+  [data-theme='dark'] .btn-step { background: rgb(var(--elevated)); border: 1px solid rgb(var(--line)); }
+  .h1 { @apply text-[24px] font-extrabold; font-family: 'Unbounded Variable', 'Geist Variable', system-ui, sans-serif; letter-spacing: -0.02em; line-height: 1.15; }
   .h2 { @apply text-[22px] font-bold; }
 }
 
@@ -65,6 +80,6 @@ body {
 }
 
 .skeleton { @apply bg-elevated rounded-xl animate-pulse; }
-.pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 88px); }
+.pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 100px); }
 @keyframes pulse-soft { 0%,100% { opacity: 1 } 50% { opacity: .85 } }
 .tick { animation: pulse-soft 1s ease-in-out infinite; }

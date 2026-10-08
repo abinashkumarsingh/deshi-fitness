@@ -27,7 +27,7 @@ export default function App() {
   useEffect(() => { setOnUnauthorized(() => { setAuth(null); nav('/login'); }); }, [nav, setAuth]);
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.theme === 'light' ? '#FFFFFF' : '#0A0A0B');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.theme === 'light' ? '#F4F7F2' : '#0C1210');
     document.documentElement.lang = settings.languageMode === 'en' ? 'en' : 'hi-Latn';
   }, [settings.theme, settings.languageMode]);
   useEffect(() => { if (auth) { loadSettings().catch(() => {}); loadExercises().catch(() => {}); } }, [auth, loadSettings, loadExercises]);
