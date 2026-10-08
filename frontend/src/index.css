@@ -70,7 +70,8 @@ body {
   .chip-on { background: rgb(12 18 16); color: #D4FF3A; border-color: rgb(12 18 16); }
   [data-theme='dark'] .chip-on { background: #D4FF3A; color: rgb(12 18 16); border-color: #D4FF3A; }
   .btn-step { @apply btn !px-0 h-16 w-16 shrink-0 text-[28px]; background: rgb(12 18 16); color: #D4FF3A; }
-  [data-theme='dark'] .btn-step { background: rgb(var(--elevated)); border: 1px solid rgb(var(--line)); }
+  @media (max-width: 359px) { .btn-step { @apply h-14 w-14 rounded-xl; } }
+  [data-theme='dark'] .btn-step { background: rgba(212,255,58,.14); border: 1.5px solid rgba(212,255,58,.45); color: #D4FF3A; }
   .h1 { @apply text-[24px] font-extrabold; font-family: 'Unbounded Variable', 'Geist Variable', system-ui, sans-serif; letter-spacing: -0.02em; line-height: 1.15; }
   .h2 { @apply text-[22px] font-bold; }
 }
