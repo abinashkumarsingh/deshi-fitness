@@ -95,6 +95,6 @@ const raw: Ex[] = [
 ];
 
 export const seedExercises = raw.map(([slug, name, category, muscleGroup, equipment, type, tracking, nameDesi]) => ({
-  slug, name, category, muscleGroup, equipment, type, tracking, nameDesi: nameDesi ?? null,
+  slug, name, category, muscleGroup, equipment, type, tracking, nameDesi: null,
   difficulty: type === 'skill' ? 'advanced' : type === 'isolation' ? 'beginner' : 'intermediate',
 }));
