@@ -10,8 +10,8 @@ export default {
         success: v('success'), warning: v('warning'), danger: v('danger'), info: v('info'),
       },
       fontFamily: {
-        sans: ['Inter', '"Noto Sans Devanagari"', 'system-ui', 'sans-serif'],
-        display: ['"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Geist Variable"', 'system-ui', 'sans-serif'],
+        display: ['"Unbounded Variable"', '"Geist Variable"', 'system-ui', 'sans-serif'],
       },
       fontSize: { hero: ['112px', { lineHeight: '1', letterSpacing: '-0.04em' }], big: ['64px', { lineHeight: '1', letterSpacing: '-0.03em' }] },
       borderRadius: { xl: '12px', '2xl': '16px', '3xl': '20px' },
