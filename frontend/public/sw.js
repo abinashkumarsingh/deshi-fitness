@@ -1,5 +1,5 @@
 // Minimal offline support: app shell + static assets. API calls are never cached.
-const CACHE = 'deshi-v1';
+const CACHE = 'deshi-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
